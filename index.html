@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multidata Colombia & Rick y Morty</title>
+    <style>
+        :root {
+            --bg: #f9fafb;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --accent-green: #059669;
+            --text-dark: #111827;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text-dark);
+        }
+
+        header {
+            padding: 3rem 1rem 2rem;
+            text-align: center;
+        }
+
+        header h1 { margin: 0; font-size: 2rem; font-weight: 800; }
+        header p { margin: 0.5rem 0 0; color: var(--text-light); }
+
+        /* Controles */
+        .controls {
+            max-width: 1100px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-section {
+            max-width: 900px;
+            margin: 0 auto 30px;
+            padding: 0 20px;
+            display: none; /* Se activa segun la vista */
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+        }
+
+        input, select {
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        /* Grid de Tarjetas */
+        .data-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 0 20px 80px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Estilos especificos Rick y Morty */
+        .card-img { width: 100%; height: auto; display: block; }
+        .card-content { padding: 20px; }
+        .card-title { font-weight: 800; font-size: 1.1rem; margin: 0 0 10px; }
+        .card-info { font-size: 0.85rem; color: var(--text-light); margin: 4px 0; }
+        .card-info span { font-weight: 700; color: var(--accent-green); }
+
+        /* Estilos especificos ICFES */
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f3f4f6;
+        }
+        .year-box {
+            text-align: center;
+            background: #f8fafc;
+            padding: 8px 4px;
+            border-radius: 8px;
+        }
+        .year-label { font-size: 0.6rem; color: var(--text-light); display: block; }
+        .val { font-weight: 800; font-size: 0.85rem; }
+
+        @media (max-width: 600px) {
+            .filter-section { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="mainTitle">Panel de Datos</h1>
+    <p id="mainSub">Selecciona una categoría para visualizar información</p>
+</header>
+
+<div class="controls">
+    <button id="btnIcfes" onclick="switchView('icfes')">Pruebas ICFES</button>
+    <button id="btnRick" onclick="switchView('rick')">Rick & Morty</button>
+</div>
+
+<div id="icfesFilters" class="filter-section">
+    <input type="text" id="nameSearch" placeholder="Buscar institución..." oninput="filterIcfes()">
+    <select id="cityFilter" onchange="filterIcfes()">
+        <option value="">Todos los municipios</option>
+    </select>
+</div>
+
+<main class="data-grid" id="container">
+    </main>
+
+<script>
+    let icfesData = [];
+    
+    // Switch de Vistas
+    function switchView(view) {
+        document.getElementById('btnIcfes').classList.toggle('active', view === 'icfes');
+        document.getElementById('btnRick').classList.toggle('active', view === 'rick');
+        document.getElementById('icfesFilters').style.display = (view === 'icfes') ? 'grid' : 'none';
+        
+        if (view === 'icfes') {
+            document.getElementById('mainTitle').innerText = "Resultados ICFES";
+            document.getElementById('mainSub').innerText = "Histórico Risaralda";
+            loadIcfes();
+        } else {
+            document.getElementById('mainTitle').innerText = "Personajes Rick & Morty";
+            document.getElementById('mainSub').innerText = "Exploración de Multiverso";
+            loadRickAndMorty();
+        }
+    }
+
+    // Lógica Rick & Morty
+    async function loadRickAndMorty() {
+        const container = document.getElementById('container');
+        container.innerHTML = '<p>Cargando dimensiones...</p>';
+        
+        const promises = [];
+        for (let i = 1; i <= 20; i++) {
+            promises.push(fetch(`https://rickandmortyapi.com/api/character/${i}`).then(res => res.json()));
+        }
+        
+        const results = await Promise.all(promises);
+        container.innerHTML = '';
+        results.forEach(char => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="${char.image}" class="card-img">
+                <div class="card-content">
+                    <h3 class="card-title">${char.name}</h3>
+                    <p class="card-info">Estado: <span>${char.status}</span></p>
+                    <p class="card-info">Especie: <span>${char.species}</span></p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Lógica ICFES
+    async function loadIcfes() {
+        if (icfesData.length === 0) {
+            const res = await fetch('https://www.datos.gov.co/resource/hk5x-635y.json');
+            icfesData = await res.json();
+            fillCityFilter(icfesData);
+        }
+        renderIcfes(icfesData);
+    }
+
+    function fillCityFilter(data) {
+        const select = document.getElementById('cityFilter');
+        const cities = [...new Set(data.map(item => item.municipio))].sort();
+        cities.forEach(city => {
+            const opt = document.createElement('option');
+            opt.value = city; opt.textContent = city;
+            select.appendChild(opt);
+        });
+    }
+
+    function renderIcfes(data) {
+        const container = document.getElementById('container');
+        container.innerHTML = '';
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-content">
+                    <div style="font-size:0.7rem; color:var(--primary); font-weight:700;">${item.municipio}</div>
+                    <h3 class="card-title" style="min-height:auto;">${item.institucion_educativa}</h3>
+                    <div class="history-grid">
+                        <div class="year-box"><span class="year-label">2024</span><span class="val">${item.a_o_2024 || '-'}</span></div>
+                        <div class="year-box"><span class="year-label">2023</span><span class="val">${item.a_o_2023 || '-'}</span></div>
+                        <div class="year-box"><span class="year-label">2022</span><span class="val">${item.a_o_2022 || '-'}</span></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function filterIcfes() {
+        const name = document.getElementById('nameSearch').value.toLowerCase();
+        const city = document.getElementById('cityFilter').value;
+        const filtered = icfesData.filter(i => 
+            i.institucion_educativa.toLowerCase().includes(name) && 
+            (city === "" || i.municipio === city)
+        );
+        renderIcfes(filtered);
+    }
+
+    // Inicio por defecto
+    switchView('icfes');
+</script>
+
+</body>
+</html>
