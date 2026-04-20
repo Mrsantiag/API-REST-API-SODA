@@ -38,7 +38,7 @@ La pagina esta desplegada a traves de GitHub Pages. Puedes acceder al sitio medi
 ## Autores
 
 * Santiago Perez
-* Sebastian Lanco
+* Sebastian blanco
 
 ---
 Desarrollado con fines academicos para la exploracion de APIs y visualizacion de datos.
